@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Məlumatı Çıxarma Qiymət Planları və Simulyatoru</title>
+    <!-- Tailwind CSS və Inter şriftini yükləyin -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8faff;
+        }
+        .card-shadow { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .premium-button-1 {
+            background-image: linear-gradient(to right, #4338ca, #6366f1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .premium-button-1:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(63, 94, 251, 0.5);
+        }
+        /* Gizli modalı mərkəzləşdirmək üçün stil */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+        /* İstifadəçini müəyyənləşdirmək üçün rəng */
+        #user-info-text {
+            color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+
+    <!-- Başlıq və İstifadəçi Məlumatı -->
+    <header class="w-full max-w-6xl flex justify-between items-center py-6 mb-8 border-b border-gray-200">
+        <h1 class="text-3xl font-extrabold text-gray-900">
+            Abunəlik Simulyatoru <span class="text-indigo-600">v2.0</span>
+        </h1>
+        <div class="flex items-center space-x-4">
+            <span id="user-info-text" class="text-lg font-semibold">Gözləyir...</span>
+            <button id="auth-button" class="px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition duration-150">
+                Giriş / Qeydiyyat
+            </button>
+        </div>
+    </header>
+
+    <!-- Qeydiyyat/Giriş Forması (Auth Modal) -->
+    <div id="auth-modal" class="hidden fixed inset-0 flex items-center justify-center modal-overlay">
+        <div class="bg-white p-8 rounded-xl card-shadow w-full max-w-md mx-4">
+            <h2 id="auth-title" class="text-3xl font-bold mb-6 text-center text-gray-800">Qeydiyyat</h2>
+            <div id="auth-message" class="hidden p-3 mb-4 rounded-lg text-sm font-medium"></div>
+
+            <input type="email" id="auth-email" placeholder="E-poçt ünvanı" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+            <input type="password" id="auth-password" placeholder="Şifrə" class="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+            
+            <button id="register-btn" class="w-full p-3 mb-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition duration-150">Qeydiyyat</button>
+            <button id="login-btn" class="w-full p-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-150 hidden">Daxil Ol</button>
+
+            <p class="mt-6 text-center text-sm text-gray-600">
+                <a href="#" id="toggle-auth-mode" class="text-indigo-600 hover:text-indigo-800 font-medium">Daxil Olmaq istəyirsiniz?</a>
+            </p>
+        </div>
+    </div>
+
+
+    <!-- Əsas Kontent (Yalnız Daxil Olan İstifadəçilər Üçün) -->
+    <main id="main-content" class="w-full max-w-6xl hidden">
+        <div id="subscribe-message" class="hidden p-4 mb-6 rounded-lg text-sm font-medium"></div>
+
+        <!-- Qiymət Planları Kartları -->
+        <div class="grid md:grid-cols-3 gap-8">
+
+            <!-- 1. Pulsuz Plan (Free) -->
+            <div id="card-free" class="bg-white p-8 rounded-xl card-shadow flex flex-col border-2 border-indigo-100 transition duration-300 hover:border-indigo-300">
+                <div class="flex-grow">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Pulsuz Plan</h2>
+                    <p class="text-gray-500 mb-6">Məhsulu sınaqdan keçirmək üçün əla</p>
+
+                    <p class="text-4xl font-extrabold text-gray-900 mb-6">
+                        $0 <span class="text-lg font-medium text-gray-500">/ ay</span>
+                    </p>
+
+                    <ul class="space-y-3 text-gray-600 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-indigo-500 mr-3 mt-1"></i>
+                            <span class="font-medium">50 Video Məlumat Çıxarılması</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-indigo-500 mr-3 mt-1"></i>
+                            <span>Əsas Analitika</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-times-circle text-gray-400 mr-3 mt-1"></i>
+                            <span class="text-gray-400 line-through">Prioritet Dəstək</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-times-circle text-gray-400 mr-3 mt-1"></i>
+                            <span class="text-gray-400 line-through">Genişləndirilmiş API Girişi</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <button id="subscribe-free" data-plan="Free" class="w-full py-3 mt-auto bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition duration-150 subscribe-btn" disabled>
+                    Cari Planınız
+                </button>
+            </div>
+
+            <!-- 2. Premium Plan (Premium 1) -->
+            <div id="card-premium1" class="bg-white p-8 rounded-xl card-shadow flex flex-col border-2 border-indigo-100 transition duration-300 hover:border-indigo-300 relative">
+                <span class="absolute top-0 right-0 -mt-3 -mr-3 px-4 py-1 bg-yellow-500 text-white text-xs font-bold uppercase rounded-full shadow-lg hidden">ƏN POPULYAR</span>
+                <div class="flex-grow">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Premium 1 Planı</h2>
+                    <p class="text-gray-500 mb-6">Fərdi istifadəçilər və kiçik komandalar üçün</p>
+
+                    <p class="text-4xl font-extrabold text-gray-900 mb-6">
+                        $29 <span class="text-lg font-medium text-gray-500">/ ay</span>
+                    </p>
+
+                    <ul class="space-y-3 text-gray-600 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-indigo-500 mr-3 mt-1"></i>
+                            <span class="font-medium">1000 Video Məlumat Çıxarılması</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-indigo-500 mr-3 mt-1"></i>
+                            <span>Genişləndirilmiş Analitika</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-indigo-500 mr-3 mt-1"></i>
+                            <span>Prioritet E-poçt Dəstəyi</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-times-circle text-gray-400 mr-3 mt-1"></i>
+                            <span class="text-gray-400 line-through">Genişləndirilmiş API Girişi</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <button id="subscribe-premium1" data-plan="Premium 1" class="w-full py-3 mt-auto text-white font-bold rounded-lg premium-button-1 subscribe-btn">
+                    Abunə Ol
+                </button>
+            </div>
+
+            <!-- 3. Premium Plan (Premium 2) -->
+            <div id="card-premium2" class="bg-white p-8 rounded-xl card-shadow flex flex-col border-2 border-indigo-100 transition duration-300 hover:border-indigo-300">
+                <div class="flex-grow">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Premium 2 Planı</h2>
+                    <p class="text-gray-500 mb-6">Böyük komandalar və müəssisələr üçün</p>
+
+                    <p class="text-4xl font-extrabold text-gray-900 mb-6">
+                        $99 <span class="text-lg font-medium text-gray-500">/ ay</span>
+                    </p>
+
+                    <ul class="space-y-3 text-gray-600 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-indigo-500 mr-3 mt-1"></i>
+                            <span class="font-medium">Limitsiz Video Məlumat Çıxarılması</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-indigo-500 mr-3 mt-1"></i>
+                            <span>Ətraflı Analitika və Hesabatlar</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-indigo-500 mr-3 mt-1"></i>
+                            <span>24/7 Xüsusi Dəstək</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-indigo-500 mr-3 mt-1"></i>
+                            <span class="font-medium">Genişləndirilmiş API Girişi</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <button id="subscribe-premium2" data-plan="Premium 2" class="w-full py-3 mt-auto bg-gray-100 text-indigo-600 font-bold rounded-lg hover:bg-indigo-50 transition duration-150 subscribe-btn">
+                    Abunə Ol
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Firebase və Əsas JavaScript Məntiqi -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firestore loqlarını yandırmaq
+        setLogLevel('Debug');
+
+        // Global Firebase dəyişənləri
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, auth, db;
+        let unsubscribeFromPlan = null;
+        let currentUserId = null;
+        let currentUserEmail = null;
+
+        // UI Elementləri
+        const userInfoEl = document.getElementById('user-info-text');
+        const authButton = document.getElementById('auth-button');
+        const mainContentEl = document.getElementById('main-content');
+        const subscribeMessageEl = document.getElementById('subscribe-message');
+        const authModal = document.getElementById('auth-modal');
+        const authTitle = document.getElementById('auth-title');
+        const authEmailInput = document.getElementById('auth-email');
+        const authPasswordInput = document.getElementById('auth-password');
+        const registerBtn = document.getElementById('register-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const toggleAuthMode = document.getElementById('toggle-auth-mode');
+        const authMessageEl = document.getElementById('auth-message');
+
+        // Auth rejimi
+        let isRegisterMode = true;
+
+        // Simulyasiya üçün API endpoint (həqiqi deyil)
+        const API_URL = 'https://api.mockservice.com/v1';
+
+        // Xəbərdarlıq/Mesaj göstərmək üçün köməkçi funksiya
+        function displayMessage(element, message, isError) {
+            element.textContent = message;
+            element.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            if (isError) {
+                element.classList.add('bg-red-100', 'text-red-700');
+            } else {
+                element.classList.add('bg-green-100', 'text-green-700');
+            }
+            // Avtomatik olaraq mesajı təmizlə
+            setTimeout(() => {
+                 element.classList.add('hidden');
+                 element.textContent = '';
+            }, 5000);
+        }
+
+        // UI-ı mövcud abunəlik vəziyyətinə görə yeniləyir
+        function updateUI(email, currentPlanName) {
+            
+            // İstifadəçi məlumatını yenilə
+            currentUserEmail = email;
+            userInfoEl.textContent = `${email}`;
+            
+            // Abunəlik məlumatına görə kartları yenilə
+            const plans = [
+                { id: 'card-free', btnId: 'subscribe-free', name: 'Free' },
+                { id: 'card-premium1', btnId: 'subscribe-premium1', name: 'Premium 1' },
+                { id: 'card-premium2', btnId: 'subscribe-premium2', name: 'Premium 2' }
+            ];
+
+            plans.forEach(plan => {
+                const cardEl = document.getElementById(plan.id);
+                const btnEl = document.getElementById(plan.btnId);
+
+                // Kart stilini təmizlə
+                cardEl.classList.remove('border-indigo-600', 'border-indigo-800');
+                cardEl.classList.add('border-indigo-100', 'hover:border-indigo-300');
+                
+                // Düyməni sıfırla
+                btnEl.textContent = 'Abunə Ol';
+                btnEl.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300', 'premium-button-1', 'bg-gray-100', 'text-indigo-600', 'hover:bg-indigo-50', 'bg-red-500', 'text-white', 'hover:bg-red-600');
+                btnEl.classList.add('bg-gray-100', 'text-indigo-600', 'hover:bg-indigo-50');
+                btnEl.disabled = false;
+
+                if (plan.name === currentPlanName) {
+                    // Cari Plan
+                    cardEl.classList.add('border-indigo-600');
+                    cardEl.classList.remove('border-indigo-100', 'hover:border-indigo-300');
+                    btnEl.textContent = 'Cari Planınız';
+                    btnEl.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    btnEl.classList.remove('bg-gray-100', 'text-indigo-600', 'hover:bg-indigo-50');
+                    btnEl.disabled = true;
+
+                    // Pulsuz plandan çıxmaq üçün (yəni, abunəlikdən imtina)
+                    if (currentPlanName !== 'Free') {
+                         btnEl.textContent = 'Abunəlikdən İmtina Et';
+                         btnEl.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                         btnEl.classList.add('bg-red-500', 'text-white', 'hover:bg-red-600');
+                         btnEl.disabled = false;
+                    }
+                } else if (currentPlanName === 'Free' && plan.name.startsWith('Premium')) {
+                    // Pulsuz plandan upgrade
+                    btnEl.textContent = 'Upgrade et';
+                    btnEl.classList.add('premium-button-1');
+                    btnEl.classList.remove('bg-gray-100', 'text-indigo-600', 'hover:bg-indigo-50');
+                } else if (plan.name.startsWith('Premium') && currentPlanName.startsWith('Premium')) {
+                    // Premiumlar arasında keçid (Upgrade/Downgrade)
+                    if (plan.name === 'Premium 1' && currentPlanName === 'Premium 2') {
+                        btnEl.textContent = 'Downgrade et';
+                        btnEl.classList.add('bg-red-500', 'text-white', 'hover:bg-red-600');
+                        btnEl.classList.remove('bg-gray-100', 'text-indigo-600', 'hover:bg-indigo-50');
+                    } else if (plan.name === 'Premium 2' && currentPlanName === 'Premium 1') {
+                        btnEl.textContent = 'Upgrade et';
+                        btnEl.classList.add('premium-button-1');
+                        btnEl.classList.remove('bg-gray-100', 'text-indigo-600', 'hover:bg-indigo-50');
+                    }
+                }
+            });
+
+            // Pulsuz plan düyməsinin vəziyyəti
+            const freeBtn = document.getElementById('subscribe-free');
+            if (currentPlanName === 'Free') {
+                freeBtn.disabled = true;
+            } else if (currentPlanName === 'Premium 1' || currentPlanName === 'Premium 2') {
+                 // Abunəlikdən imtina et düyməsini qırmızı et
+                const currentPlanBtn = document.getElementById('subscribe-' + currentPlanName.toLowerCase().replace(' ', ''));
+                currentPlanBtn.textContent = 'Abunəlikdən İmtina Et';
+                currentPlanBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                currentPlanBtn.classList.add('bg-red-500', 'text-white', 'hover:bg-red-600');
+                currentPlanBtn.disabled = false; // İmtina etməyi aktiv saxla
+            }
+        }
+
+        // Firestore Abunəlik Məlumatlarını Yadda Saxla
+        async function saveUserSubscription(planName) {
+            if (!db || !currentUserId) return;
+            // Unutmayın: bütün məlumatlar /artifacts/{appId}/users/{userId}/subscriptions/userSubscription yolu üzərindədir.
+            const planRef = doc(db, 'artifacts', appId, 'users', currentUserId, 'subscriptions', 'userSubscription');
+            
+            try {
+                await setDoc(planRef, {
+                    plan: planName,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+            } catch (error) {
+                console.error("Firestore-a abunəlik məlumatlarını yazarkən xəta baş verdi:", error);
+                displayMessage(subscribeMessageEl, `❌ Abunəlik Saxlanması Xətası: ${error.message}`, true);
+            }
+        }
+        
+        // Firestore Abunəlik Məlumatlarını Dinlə
+        function subscribeToPlanChanges(userId) {
+            if (unsubscribeFromPlan) {
+                unsubscribeFromPlan(); // Əvvəlki dinləyicini dayandır
+            }
+            if (!db || !userId) return;
+
+            const planRef = doc(db, 'artifacts', appId, 'users', userId, 'subscriptions', 'userSubscription');
+
+            unsubscribeFromPlan = onSnapshot(planRef, (docSnap) => {
+                let currentPlan = 'Free'; // Varsayılan olaraq Pulsuz
+
+                if (docSnap.exists()) {
+                    currentPlan = docSnap.data().plan || 'Free';
+                }
+                
+                // UI-ı yeni planla yenilə
+                updateUI(currentUserEmail, currentPlan);
+
+            }, (error) => {
+                console.error("Abunəlik dəyişikliklərini dinləyərkən xəta baş verdi:", error);
+                displayMessage(subscribeMessageEl, `❌ Abunəlik məlumatlarını yükləyərkən xəta: ${error.message}`, true);
+            });
+        }
+        
+        // Abunəlik Düyməsinin İdarə Edilməsi
+        async function handleSubscribeClick(event) {
+            const btn = event.target;
+            const planName = btn.dataset.plan;
+            
+            if (btn.disabled || !currentUserId || currentUserEmail.startsWith('Anonim')) {
+                // Əgər anonim və ya daxil olmayıbsa, modalı aç
+                toggleAuthModal(true);
+                displayMessage(subscribeMessageEl, "Abunə olmaq üçün daxil olmalı və ya qeydiyyatdan keçməlisiniz.", true);
+                return;
+            }
+
+            const subscribeMessageEl = document.getElementById('subscribe-message');
+            subscribeMessageEl.classList.add('hidden'); // Əvvəlki mesajı gizlət
+
+            try {
+                let currentPlan = planName;
+                let message = `Siz indi "${planName}" planına abunəsiniz. Təşəkkür edirik!`;
+
+                // Abunəlikdən imtina etmək (Free plana keçmək)
+                if (btn.textContent.includes('Abunəlikdən İmtina Et')) {
+                    currentPlan = 'Free';
+                    message = `Siz ${currentUserEmail} üçün abunəlikdən uğurla imtina etdiniz. Cari planınız: Pulsuz.`;
+                    
+                    // Həqiqi API çağırışı burada olmalıdır: fetch(`${API_URL}/unsubscribe`, { ... });
+                } else {
+                    // Ödənişli plana abunəlik simulyasiyası (Upgrade/Downgrade)
+                    
+                    // Həqiqi API çağırışı burada olmalıdır
+                }
+
+                // Firestore-u yenilə (bu, onSnapshot vasitəsilə UI-ı avtomatik yeniləyəcək)
+                await saveUserSubscription(currentPlan);
+
+                displayMessage(subscribeMessageEl, message, false);
+
+            } catch (error) {
+                displayMessage(subscribeMessageEl, `❌ Xəta: ${error.message}`, true);
+            }
+        }
+
+        // Qeydiyyat/Giriş Modalını Aç/Bağla
+        function toggleAuthModal(show) {
+            if (show) {
+                authModal.classList.remove('hidden');
+                // Modalı açarkən daxil etmə sahələrini təmizlə
+                authEmailInput.value = '';
+                authPasswordInput.value = '';
+                authMessageEl.classList.add('hidden');
+                // Rejimi yenidən təyin et
+                setAuthModeUI(isRegisterMode); 
+            } else {
+                authModal.classList.add('hidden');
+            }
+        }
+        
+        // Qeydiyyat/Giriş rejiminin UI-ını təyin et
+        function setAuthModeUI(isRegister) {
+            authTitle.textContent = isRegister ? 'Qeydiyyat' : 'Daxil Ol';
+            registerBtn.classList.toggle('hidden', !isRegister);
+            loginBtn.classList.toggle('hidden', isRegister);
+            toggleAuthMode.textContent = isRegister ? 'Daxil Olmaq istəyirsiniz?' : 'Qeydiyyatdan keçmək istəyirsiniz?';
+            authMessageEl.classList.add('hidden'); // Mesajı təmizlə
+        }
+
+        // Qeydiyyat
+        async function handleRegister() {
+            const email = authEmailInput.value.trim();
+            const password = authPasswordInput.value.trim();
+            
+            if (!email || !password) {
+                displayMessage(authMessageEl, "E-poçt və şifrə daxil edin.", true);
+                return;
+            }
+
+            try {
+                // Şifrənin minimum uzunluğunu yoxla (Firebase default 6-dır)
+                 if (password.length < 6) {
+                    throw new Error("auth/weak-password");
+                }
+
+                await createUserWithEmailAndPassword(auth, email, password);
+                // Qeydiyyat uğurlu olduqda, onAuthStateChanged işə düşəcək və UI yenilənəcək
+                toggleAuthModal(false); 
+                displayMessage(subscribeMessageEl, `✅ Uğurla qeydiyyatdan keçdiniz: ${email}`, false);
+            } catch (error) {
+                console.error("Qeydiyyat xətası:", error);
+                
+                let errorMessage;
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'Bu e-poçt artıq qeydiyyatdan keçib. Daxil olun.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Şifrə çox zəifdir. Ən azı 6 simvol istifadə edin.';
+                } else {
+                    errorMessage = `❌ Xəta: ${error.message}`;
+                }
+                displayMessage(authMessageEl, errorMessage, true);
+            }
+        }
+
+        // Daxil Olma
+        async function handleLogin() {
+            const email = authEmailInput.value.trim();
+            const password = authPasswordInput.value.trim();
+            
+            if (!email || !password) {
+                displayMessage(authMessageEl, "E-poçt və şifrə daxil edin.", true);
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // Giriş uğurlu olduqda, onAuthStateChanged işə düşəcək və UI yenilənəcək
+                toggleAuthModal(false); 
+                displayMessage(subscribeMessageEl, `✅ Uğurla daxil oldunuz: ${email}`, false);
+            } catch (error) {
+                console.error("Giriş xətası:", error);
+                
+                let errorMessage;
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+                    errorMessage = 'Yanlış e-poçt və ya şifrə.';
+                } else {
+                    errorMessage = `❌ Xəta: ${error.message}`;
+                }
+                displayMessage(authMessageEl, errorMessage, true);
+            }
+        }
+
+        /**
+         * Firebase-dən çıxış funksiyası.
+         * İstifadəçinin hesabı bağlamasını və onAuthStateChanged vasitəsilə UI-ın yenilənməsini təmin edir.
+         */
+        async function handleLogout() {
+            try {
+                const userEmail = currentUserEmail; // Çıxışdan əvvəl e-poçtu saxla
+                await signOut(auth);
+                // Çıxışdan sonra UI onAuthStateChanged tərəfindən anonim istifadəçi vəziyyətinə keçiriləcək.
+                
+                // Uğurlu çıxış mesajı
+                displayMessage(subscribeMessageEl, `👋 ${userEmail} hesabından uğurla çıxış edildi.`, false); 
+            } catch (error) {
+                console.error("Çıxış xətası:", error);
+                displayMessage(subscribeMessageEl, `❌ Çıxış xətası: ${error.message}`, true);
+            }
+        }
+
+        // Başlanğıcda token varsa, daxil ol
+        const handleInitialAuth = async () => {
+             // İstifadəçi artıq autentifikasiya olunubsa heç nə etmə
+             if (auth.currentUser) return; 
+
+             if (initialAuthToken) {
+                try {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } catch (error) {
+                    console.error("Xüsusi Token ilə Giriş Xətası (Fallback to Anonymous):", error);
+                    // Token uğursuz olarsa, anonim daxil ol
+                    await signInAnonymously(auth);
+                }
+             } else {
+                 // Anonim daxil olmaq üçün (token yoxdursa)
+                 await signInAnonymously(auth);
+             }
+        };
+
+        // Firebase tətbiqini başladın
+        if (Object.keys(firebaseConfig).length > 0) {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            // Başlanğıc Autentifikasiya vəziyyətini yoxla
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUserId = user.uid;
+                    // Anonim istifadəçidirsə, "Anonim İstifadəçi" olaraq göstər
+                    const email = user.email || (user.isAnonymous ? `Anonim (${user.uid.substring(0, 8)}...)` : 'Anonim İstifadəçi'); 
+                    currentUserEmail = email;
+
+                    // UI-ı yenilə
+                    userInfoEl.textContent = `İstifadəçi: ${currentUserEmail}`;
+                    
+                    // Əgər e-poçtla daxil olubsa, çıxış düyməsini göstər, əks halda modalı açmağı təklif et
+                    if (user.email) {
+                        authButton.textContent = 'Çıxış';
+                        authButton.onclick = handleLogout; // Çıxış funksiyasını təyin et
+                    } else {
+                        // Anonim istifadəçidirsə, "Giriş / Qeydiyyat" düyməsini saxla
+                        authButton.textContent = 'Giriş / Qeydiyyat';
+                        authButton.onclick = null; // addEventListener-ə etibar et
+                    }
+
+                    mainContentEl.classList.remove('hidden');
+                    
+                    // onAuthStateChanged tetikləndikdə modalın açıq qalmaması üçün
+                    toggleAuthModal(false);
+
+                    // Abunəlik məlumatlarını dinləməyə başla
+                    subscribeToPlanChanges(currentUserId);
+                    
+                    // Əgər qeydiyyatdan keçmiş istifadəçidirsə VƏ abunəlik planı yoxdursa, Free planını Firestore-a yaz
+                    if (user.email) {
+                        const planRef = doc(db, 'artifacts', appId, 'users', currentUserId, 'subscriptions', 'userSubscription');
+                        const docSnap = await getDoc(planRef);
+                        
+                        // Yalnız doc yoxdursa "Free" planı təyin et
+                        if (!docSnap.exists() || !docSnap.data()?.plan) {
+                            await saveUserSubscription('Free');
+                        }
+                    }
+                    
+                } else {
+                    // İstifadəçi çıxıb (null vəziyyəti, anonim daxil olmağa keçəcək)
+                    currentUserId = null;
+                    currentUserEmail = null;
+                    userInfoEl.textContent = 'Daxil Olmayıb';
+                    authButton.textContent = 'Giriş / Qeydiyyat';
+                    authButton.onclick = null; // Təmizlə
+                    mainContentEl.classList.add('hidden');
+                    if (unsubscribeFromPlan) unsubscribeFromPlan(); // Dinləyicini dayandır
+                    updateUI('Daxil Olmayıb', 'Free'); // Kartları Pulsuz plan üçün yenilə
+                }
+            });
+            
+            // onAuthStateChanged quraşdırıldıqdan dərhal sonra ilkin autentifikasiyanı işə sal
+            handleInitialAuth().catch(e => console.error("Əsas autentifikasiya xətası:", e));
+
+
+        } else {
+            console.error("Firebase konfiqurasiyası yoxdur. Tətbiq işləməyəcək.");
+            userInfoEl.textContent = 'XƏTA: Firebase yüklənmədi';
+            authButton.disabled = true;
+        }
+        
+        // --- Event Dinləyiciləri ---
+        
+        // Auth düyməsinin klik hadisəsini burada əlavə edirik ki, həmişə işləsin (xüsusən də 'Giriş / Qeydiyyat' rejimində)
+        authButton.addEventListener('click', () => {
+            // Əgər authButton.onclick artıq 'handleLogout' olaraq təyin edilibsə, heç nə etmə,
+            // əks halda modalı aç
+            if (authButton.textContent.includes('Giriş') || authButton.textContent.includes('Qeydiyyat')) {
+                 toggleAuthModal(true);
+            }
+        });
+
+
+        // Abunəlik düymələrini qoşun
+        document.querySelectorAll('.subscribe-btn').forEach(button => {
+            button.addEventListener('click', handleSubscribeClick);
+        });
+
+        // Auth Modal düymələri
+        toggleAuthMode.addEventListener('click', (e) => {
+            e.preventDefault();
+            isRegisterMode = !isRegisterMode;
+            setAuthModeUI(isRegisterMode);
+            authMessageEl.classList.add('hidden'); // Rejim dəyişəndə mesajı təmizlə
+        });
+
+        registerBtn.addEventListener('click', handleRegister);
+        loginBtn.addEventListener('click', handleLogin);
+        // Modalı overlay-a klikləməklə bağlamaq (yalnız daxil olmayan istifadəçilər üçün)
+        authModal.addEventListener('click', (e) => {
+             // İstifadəçi daxil olmayıbsa VƏ klik overlay-a olubsa bağla
+             if (e.target === authModal && (!auth.currentUser || auth.currentUser.isAnonymous)) {
+                 toggleAuthModal(false);
+             }
+        });
+        
+    </script>
+</body>
+</html>
