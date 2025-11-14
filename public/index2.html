@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+
+<html lang="az">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Video Məlumatı Çıxarma Qiymət Planları və Simulyatoru</title>
+
+    <!-- Load Tailwind CSS and Inter font -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+
+        body {
+
+            font-family: 'Inter', sans-serif;
+
+            background-color: #f8faff;
+
+        }
+
+        .card-shadow { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+
+        .premium-button-1 {
+
+            background-image: linear-gradient(to right, #4338ca 0%, #1d4ed8 100%);
+
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.5);
+
+        }
+
+        .premium-button-1:hover {
+
+            background-image: linear-gradient(to right, #1d4ed8 0%, #4338ca 100%);
+
+        }
+
+        .disabled-button {
+
+            opacity: 0.6;
+
+            cursor: not-allowed;
+
+        }
+
+        .max-w-7xl { max-width: 1280px; }
+
+        .result-card-embed { max-height: 400px; overflow: hidden; }
+
+        .video-thumbnail { aspect-ratio: 16 / 9; object-fit: cover; }
+
+        .enterprise-card {
+
+            border-color: #f59e0b; /* Amber */
+
+            background-color: #fffbeb; /* Amber light */
+
+        }
+
+        .enterprise-card .text-enterprise {
+
+            color: #d97706; /* Amber dark */
+
+        }
+
+        /* YENİ STİL: Plan kartı üçün Flexbox layout */
+
+        .plan-card {
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: space-between; /* düymənin aşağıda qalmasını təmin edir */
+
+            height: 100%; /* Hündürlüyü bərabərləşdirmək üçün flex-grid tərəfindən idarə olunacaq */
+
+        }
+
+    </style>
+
+</head>
+
+<body class="p-4 md:p-8">
+
+
+
+    <div class="max-w-7xl mx-auto">
+
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Video/Link Məlumatı Çıxarma Servisi</h1>
+
+        <p class="text-gray-600 mb-10">URL daxil edin, başlıq, təsvir və kiçik şəkil (thumbnail) məlumatlarını alın.</p>
+
+
+
+        <!-- Auth Section -->
+
+        <div id="auth-section">
+
+            <div class="max-w-md mx-auto card-shadow bg-white p-8 rounded-xl space-y-4">
+
+                <h2 class="text-2xl font-bold text-center text-indigo-700" id="auth-title">Daxil Olun</h2>
+
+                <input id="auth-email" type="email" placeholder="Email" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+                <input id="auth-password" type="password" placeholder="Şifrə" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+                <p id="auth-message" class="text-sm text-center font-medium h-4"></p>
+
+                
+
+                <div class="flex flex-col space-y-3">
+
+                    <button onclick="handleAuth(true)" class="w-full py-3 rounded-xl text-white font-semibold transition-all premium-button-1">
+
+                        Daxil Ol
+
+                    </button>
+
+                    <button onclick="handleAuth(false)" class="w-full py-3 rounded-xl text-indigo-700 bg-indigo-100 font-semibold hover:bg-indigo-200 transition-colors">
+
+                        Qeydiyyatdan Keç
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Main Application Content -->
+
+        <div id="app-content" class="hidden space-y-12">
+
+            
+
+            <!-- User Status and Logout -->
+
+            <div class="flex justify-between items-center p-4 bg-indigo-50 rounded-xl card-shadow">
+
+                <div class="text-lg font-medium">
+
+                    <span id="user-email" class="text-indigo-800"></span>
+
+                    <!-- Planın adı burda göstəriləcək -->
+
+                    <span id="subscription-status" class="ml-3 px-3 py-1 text-sm rounded-full font-bold"></span>
+
+                </div>
+
+                <button onclick="logout()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold">
+
+                    Çıxış <i class="fas fa-sign-out-alt ml-1"></i>
+
+                </button>
+
+            </div>
+
+
+
+            <!-- Pricing Toggle Button -->
+
+            <div class="bg-white p-4 rounded-xl card-shadow border border-indigo-200">
+
+                <button onclick="togglePricing()" class="w-full text-left flex justify-between items-center text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors">
+
+                    Qiymət Planlarına Baxın <i id="pricing-toggle-icon" class="fas fa-chevron-down ml-2 transition-transform duration-300"></i>
+
+                </button>
+
+            </div>
+
+            
+
+            <!-- Pricing Content Container (Initially hidden) -->
+
+            <div id="pricing-plans-container" class="hidden">
+
+                <div class="bg-white p-8 rounded-xl card-shadow border border-indigo-200 mt-4">
+
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Qiymət Planları</h2>
+
+                    
+
+                    <!-- DİQQƏT: Hündürlüyün bərabər olması üçün grid istifadə olunur -->
+
+                    <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+
+                        
+
+                        <!-- 1. Free Plan (Pulsuz) -->
+
+                        <!-- YENİ CLASS: plan-card əlavə edildi -->
+
+                        <div id="free-plan-card" class="plan-card border-2 border-green-400 p-6 rounded-xl space-y-4 bg-green-50">
+
+                            <div>
+
+                                <h3 class="text-2xl font-extrabold text-green-700">Pulsuz Plan</h3>
+
+                                <p class="text-4xl font-black text-green-800">$0<span class="text-lg font-medium text-gray-500">/ay</span></p>
+
+                                <ul class="space-y-2 text-gray-700 mt-4">
+
+                                    <li class="flex items-start"><i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i> **Yalnız YouTube URL-ləri**</li>
+
+                                    <li class="flex items-start"><i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i> Əsas məlumat çıxarışı (Title, Thumbnail)</li>
+
+                                    <li class="flex items-start"><i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i> Gündəlik **10** sorğu limiti</li>
+
+                                </ul>
+
+                            </div>
+
+                            <!-- Düymə yerində qalır -->
+
+                            <button id="subscribe-button-free" onclick="subscribe('Pulsuz Plan')" class="w-full py-3 rounded-xl text-white font-semibold bg-green-500 hover:bg-green-600 transition-colors mt-6">
+
+                                Pulsuz Plana Keç
+
+                            </button>
+
+                        </div>
+
+                        
+
+                        <!-- 2. Standard Plan -->
+
+                        <!-- YENİ CLASS: plan-card əlavə edildi -->
+
+                        <div id="standard-plan-card" class="plan-card border-2 border-blue-400 p-6 rounded-xl space-y-4 bg-blue-50">
+
+                            <div>
+
+                                <h3 class="text-2xl font-extrabold text-blue-700">Standard Plan</h3>
+
+                                <p class="text-4xl font-black text-blue-800">$19.99<span class="text-lg font-medium text-gray-500">/ay</span></p>
+
+                                <ul class="space-y-2 text-gray-700 mt-4">
+
+                                    <li class="flex items-start"><i class="fas fa-star text-blue-500 mr-2 mt-1"></i> **Platforma-spesifik videolar:** YouTube, TikTok, Vimeo.</li>
+
+                                    <li class="flex items-start"><i class="fas fa-star text-blue-500 mr-2 mt-1"></i> Əsas məlumat çıxarışı + Embed Kodu</li>
+
+                                    <li class="flex items-start"><i class="fas fa-star text-blue-500 mr-2 mt-1"></i> Gündəlik **400** sorğu limiti</li>
+
+                                </ul>
+
+                            </div>
+
+                            <button id="subscribe-button-standard" onclick="subscribe('Standard Plan')" class="w-full py-3 rounded-xl text-white font-semibold transition-all premium-button-1 bg-blue-600 hover:bg-blue-700 mt-6">
+
+                                Abunə Ol (Standard Plan)
+
+                            </button>
+
+                        </div>
+
+                        
+
+                        <!-- 3. Pro Plan -->
+
+                        <!-- YENİ CLASS: plan-card əlavə edildi -->
+
+                        <div id="pro-plan-card" class="plan-card border-2 border-indigo-600 p-6 rounded-xl space-y-4 bg-white transform scale-105 card-shadow">
+
+                            <div>
+
+                                <h3 class="text-2xl font-extrabold text-indigo-700">Pro Plan</h3>
+
+                                <p class="text-4xl font-black text-indigo-800">$49.99<span class="text-lg font-medium text-gray-500">/ay</span></p>
+
+                                <ul class="space-y-2 text-gray-700 mt-4">
+
+                                    <li class="flex items-start"><i class="fas fa-star text-indigo-500 mr-2 mt-1"></i> **BÜTÜN linklər** (YouTube, TikTok, Ümumi Saytlar, s.)</li>
+
+                                    <li class="flex items-start"><i class="fas fa-star text-indigo-500 mr-2 mt-1"></i> Ətraflı məlumat çıxarışı (Schema.org, OpenGraph)</li>
+
+                                    <li class="flex items-start"><i class="fas fa-star text-indigo-500 mr-2 mt-1"></i> Gündəlik **1500** sorğu limiti</li>
+
+                                    <li class="flex items-start"><i class="fas fa-star text-indigo-500 mr-2 mt-1"></i> Puppeteer ilə gücləndirilmiş çıxarış</li>
+
+                                </ul>
+
+                            </div>
+
+                            <button id="subscribe-button-pro" onclick="subscribe('Pro Plan')" class="w-full py-3 rounded-xl text-white font-semibold transition-all premium-button-1 mt-6">
+
+                                Abunə Ol (Pro Plan)
+
+                            </button>
+
+                        </div>
+
+
+
+                        <!-- 4. Enterprise Plan -->
+
+                        <!-- YENİ CLASS: plan-card əlavə edildi -->
+
+                        <div id="enterprise-plan-card" class="plan-card border-2 enterprise-card p-6 rounded-xl space-y-4 transform hover:scale-105 transition-transform">
+
+                            <div>
+
+                                <h3 class="text-2xl font-extrabold text-enterprise">Korporativ Plan</h3>
+
+                                <p class="text-4xl font-black text-enterprise">$999.99<span class="text-lg font-medium text-gray-500">/ay</span></p>
+
+                                <ul class="space-y-2 text-gray-700 mt-4">
+
+                                    <li class="flex items-start"><i class="fas fa-infinity text-enterprise mr-2 mt-1"></i> **Limitsiz Sorğu Limiti**</li>
+
+                                    <li class="flex items-start"><i class="fas fa-infinity text-enterprise mr-2 mt-1"></i> BÜTÜN linklər + Xüsusi Logic</li>
+
+                                    <li class="flex items-start"><i class="fas fa-cogs text-enterprise mr-2 mt-1"></i> Xüsusi API və Quraşdırma Dəstəyi</li>
+
+                                    <li class="flex items-start"><i class="fas fa-headset text-enterprise mr-2 mt-1"></i> 24/7 Xüsusi Premium Dəstək</li>
+
+                                </ul>
+
+                            </div>
+
+                            <button id="subscribe-button-enterprise" onclick="subscribe('Korporativ Plan')" class="w-full py-3 rounded-xl text-white font-semibold transition-all bg-amber-600 hover:bg-amber-700 mt-6">
+
+                                Abunə Ol (Korporativ Plan)
+
+                            </button>
+
+                        </div>
+
+
+
+                    </div>
+
+                    
+
+                    <p id="subscribe-message" class="text-center text-sm font-semibold h-4 text-indigo-700 mt-4"></p>
+
+                </div>
+
+            </div> <!-- End of pricing-plans-container -->
+
+
+
+            <!-- URL Input and Extraction Area -->
+
+            <div class="bg-white p-8 rounded-xl card-shadow">
+
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+
+                    <i class="fas fa-link mr-3 text-indigo-600"></i> Link Analizi
+
+                </h2>
+
+                <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+
+                    <input id="url-input" type="url" placeholder="Video və ya veb səhifə URL-i daxil edin (məs. YouTube, TikTok, və ya hər hansı bir sayt)" class="flex-grow p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" value="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+
+                    <button id="extract-button" onclick="extractInfo()" class="px-6 py-4 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex-shrink-0">
+
+                        <i class="fas fa-magic mr-2"></i> Məlumatı Çıxar
+
+                    </button>
+
+                </div>
+
+                <p id="error-message" class="text-red-500 mt-3 font-medium h-4"></p>
+
+                <div id="loading-indicator" class="hidden mt-4 text-indigo-600 font-semibold">
+
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Məlumat çəkilir...
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Single Latest Result Display (ONLY THIS REMAINS) -->
+
+            <div id="latest-result-container" class="hidden bg-indigo-50 p-8 rounded-xl card-shadow border border-indigo-200">
+
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Ən Son Nəticə</h2>
+
+                <div id="result-card-latest"></div>
+
+            </div>
+
+
+
+        </div> <!-- End of app-content -->
+
+    </div>
+
+
+
+    <script>
+
+        // Global dəyişənlər
+
+        const API_URL = 'http://localhost:3001';
+
+        let isSubscribed = false;
+
+        let authReady = false;
+
+        
+
+        // DOM Elementləri
+
+        const authSection = document.getElementById('auth-section');
+
+        const appContent = document.getElementById('app-content');
+
+        const authTitle = document.getElementById('auth-title');
+
+        const authMessage = document.getElementById('auth-message');
+
+        const latestResultContainer = document.getElementById('latest-result-container');
+
+        const resultCardLatest = document.getElementById('result-card-latest');
+
+        const userEmailEl = document.getElementById('user-email');
+
+        const subStatusEl = document.getElementById('subscription-status');
+
+        // Plan düymələri
+
+        const subscribeButtonFree = document.getElementById('subscribe-button-free'); 
+
+        const subscribeButtonStandard = document.getElementById('subscribe-button-standard');
+
+        const subscribeButtonPro = document.getElementById('subscribe-button-pro');
+
+        const subscribeButtonEnterprise = document.getElementById('subscribe-button-enterprise');
+
+        const subscribeMessageEl = document.getElementById('subscribe-message');
+
+        const urlInput = document.getElementById('url-input');
+
+        const extractButton = document.getElementById('extract-button');
+
+        const errorMessageEl = document.getElementById('error-message');
+
+        const loadingIndicator = document.getElementById('loading-indicator');
+
+        // Pricing toggle elementləri
+
+        const pricingContainer = document.getElementById('pricing-plans-container');
+
+        const pricingToggleIcon = document.getElementById('pricing-toggle-icon');
+
+
+
+        // --- Utility Functions ---
+
+
+
+        /** Mesajı müvəqqəti göstərir və silir */
+
+        function displayMessage(element, message, isError = false) {
+
+            // Elementin h-4 (height 1rem) classını mesajın görünüb-yoxlanmasına görə idarə et
+
+            element.textContent = message;
+
+            element.className = isError 
+
+                ? 'text-red-500 mt-3 font-medium h-4' 
+
+                : (element.id === 'error-message' ? 'text-red-500 mt-3 font-medium h-4' : 'text-green-500 mt-1 font-medium text-xs');
+
+            
+
+            // Kopyalama mesajları üçün xüsusi timeout
+
+            if (element.id === 'image-copy-message-latest') {
+
+                 element.className = isError ? 'text-red-500 mt-1 font-medium text-xs' : 'text-green-500 mt-1 font-medium text-xs';
+
+            }
+
+
+
+            setTimeout(() => {
+
+                element.textContent = '';
+
+                // Element boşaldıqdan sonra classları sıfırla, amma h4-ü saxla ki, layout yerdəyişməsin
+
+                if (element.id === 'error-message' || element.id === 'auth-message') {
+
+                    element.className = element.id === 'error-message' ? 'text-red-500 mt-3 font-medium h-4' : 'text-sm text-center font-medium h-4';
+
+                } else if (element.id === 'image-copy-message-latest') {
+
+                    // Şəkil mesajı üçün text-xs və h-4 saxla
+
+                    element.className = 'text-xs h-4 mt-1';
+
+                }
+
+                
+
+            }, 5000);
+
+        }
+
+
+
+        /** Kopyalama funksiyası (iFrame uyğun) */
+
+        function copyToClipboard(text, messageElId, successMsg, errorMsg) {
+
+            // Mesajın hara yazılacağını müəyyənləşdir
+
+            const messageElement = messageElId ? document.getElementById(messageElId) : document.getElementById('error-message');
+
+
+
+            if (!text || text.includes('Kopyalamaq üçün kod yoxdur')) {
+
+                displayMessage(messageElement, errorMsg, true);
+
+                return;
+
+            }
+
+            const textArea = document.createElement("textarea");
+
+            textArea.value = text;
+
+            textArea.style.position = 'fixed'; 
+
+            textArea.style.left = '-9999px'; 
+
+            document.body.appendChild(textArea);
+
+            textArea.focus();
+
+            textArea.select();
+
+            try {
+
+                document.execCommand('copy');
+
+                displayMessage(messageElement, successMsg, false); 
+
+            } catch (err) {
+
+                console.error('Kopyalama uğursuz oldu: ', err);
+
+                displayMessage(messageElement, '❌ Kopyalama uğursuz oldu.', true);
+
+            }
+
+            document.body.removeChild(textArea);
+
+        }
+
+
+
+        function copyEmbedCode(code) {
+
+            // Embed kodu mesajı URL axtarışının altında qalır (error-message istifadə edir)
+
+            const codeText = code.trim().replace(/&lt;/g, '<').replace(/&gt;/g, '>'); 
+
+            copyToClipboard(
+
+                codeText,
+
+                null, // Null ötürülür ki, default olaraq error-message istifadə edilsin
+
+                '✅ Embed kodu kopyalandı!',
+
+                '❌ Kopyalamaq üçün kod yoxdur.'
+
+            );
+
+        }
+
+        
+
+        function copyImageUrl(url, messageElId) {
+
+            // Şəkil URL-i mesajı öz düyməsinin altında görünür (image-copy-message-latest istifadə edir)
+
+            copyToClipboard(
+
+                url,
+
+                messageElId, // ID ötürülür
+
+                '✅ Şəkil URL-i Kopyala',
+
+                '❌ Kopyalamaq üçün URL yoxdur.'
+
+            );
+
+        }
+
+        
+
+        function togglePricing() {
+
+            const isHidden = pricingContainer.classList.toggle('hidden');
+
+            // İkonanı dəyiş
+
+            if (isHidden) {
+
+                pricingToggleIcon.classList.remove('fa-chevron-up');
+
+                pricingToggleIcon.classList.add('fa-chevron-down');
+
+            } else {
+
+                pricingToggleIcon.classList.remove('fa-chevron-down');
+
+                pricingToggleIcon.classList.add('fa-chevron-up');
+
+            }
+
+        }
+
+
+
+
+
+        // --- Core App Logic ---
+
+
+
+        /** * İstifadəçi statusunu yeniləyir və UI-ı idarə edir 
+
+         * @param {string} userEmail - İstifadəçinin emaili.
+
+         * @param {boolean} subscribed - Abunə olub-olmaması (Simulyasiya API-dən gəlir).
+
+         * @param {string} [planName=null] - Abunə olduğu planın adı (Daha çox localStorage-dan istifadə olunur).
+
+         */
+
+        function updateUI(userEmail, subscribed, planName = null) {
+
+            // Cari planı ya funksiya parametrindən, ya da localStorage-dan alırıq. 
+
+            const currentPlan = planName || localStorage.getItem('currentPlan') || 'Pulsuz Plan';
+
+            
+
+            // isSubscribed-i cari planın növünə görə müəyyən et
+
+            isSubscribed = currentPlan !== 'Pulsuz Plan'; 
+
+
+
+            userEmailEl.textContent = userEmail;
+
+            subStatusEl.textContent = currentPlan; // Plan adını göstər
+
+            subStatusEl.className = `ml-3 px-3 py-1 text-sm rounded-full font-bold ${currentPlan === 'Pulsuz Plan' ? 'bg-green-200 text-green-800' : 'bg-indigo-200 text-indigo-800'}`;
+
+            
+
+            // Abunəlik düymələrini idarə et (YENİ MƏNTİQ)
+
+            const allButtons = [
+
+                { id: subscribeButtonFree, name: 'Pulsuz Plan' },
+
+                { id: subscribeButtonStandard, name: 'Standard Plan' },
+
+                { id: subscribeButtonPro, name: 'Pro Plan' },
+
+                { id: subscribeButtonEnterprise, name: 'Korporativ Plan' }
+
+            ];
+
+
+
+            allButtons.forEach(item => {
+
+                const btn = item.id;
+
+                const buttonPlanName = item.name;
+
+                const isCurrentPlan = currentPlan === buttonPlanName;
+
+
+
+                // Düymənin stilini sıfırla
+
+                btn.classList.remove('disabled-button', 'bg-green-500', 'bg-blue-600', 'bg-amber-600', 'premium-button-1', 'hover:bg-green-600', 'hover:bg-blue-700', 'hover:bg-amber-700');
+
+                btn.disabled = false;
+
+                btn.textContent = 'Abunə Ol'; // Default text
+
+                btn.classList.add('transition-colors'); // Transition class-ı sıfırlama
+
+                
+
+
+
+                if (isCurrentPlan) {
+
+                    // Cari plan
+
+                    btn.textContent = 'Cari Plan';
+
+                    btn.classList.add('disabled-button');
+
+                    btn.disabled = true;
+
+                    // Cari planın rəngini qaytar
+
+                    if (buttonPlanName === 'Pulsuz Plan') { btn.classList.add('bg-green-500'); }
+
+                    else if (buttonPlanName === 'Standard Plan') { btn.classList.add('bg-blue-600'); }
+
+                    else if (buttonPlanName === 'Korporativ Plan') { btn.classList.add('bg-amber-600'); }
+
+                    else { btn.classList.add('premium-button-1'); } // Pro Plan
+
+                } else if (buttonPlanName === 'Pulsuz Plan') {
+
+                    // Pulsuz Plana Keç (əgər ödənişlidirsə)
+
+                    btn.textContent = 'Pulsuz Plana Keç';
+
+                    btn.classList.add('bg-green-500', 'hover:bg-green-600');
+
+                } else {
+
+                    // Upgrade/fərqli ödənişli planlar
+
+                    btn.textContent = `Abunə Ol (${buttonPlanName})`;
+
+                    if (buttonPlanName === 'Standard Plan') { btn.classList.add('bg-blue-600', 'hover:bg-blue-700'); }
+
+                    else if (buttonPlanName === 'Korporativ Plan') { btn.classList.add('bg-amber-600', 'hover:bg-amber-700'); }
+
+                    else { btn.classList.add('premium-button-1'); } // Pro Plan
+
+                }
+
+            });
+
+            
+
+            authSection.classList.add('hidden');
+
+            appContent.classList.remove('hidden');
+
+
+
+            // Plan kartlarını vizual olaraq idarə et
+
+            const freeCard = document.getElementById('free-plan-card').parentElement;
+
+            const standardCard = document.getElementById('standard-plan-card').parentElement;
+
+            const proCard = document.getElementById('pro-plan-card').parentElement;
+
+            const enterpriseCard = document.getElementById('enterprise-plan-card').parentElement; 
+
+
+
+            // Bütün kartlardan fərqləndirməni (scale və shadow) sil
+
+            [freeCard, standardCard, proCard, enterpriseCard].forEach(card => {
+
+                card.classList.remove('opacity-100', 'scale-105', 'card-shadow', 'lg:scale-105');
+
+                card.classList.add('opacity-70');
+
+            });
+
+
+
+            // Cari aktiv planı fərqləndir
+
+            let activeCard;
+
+            if (currentPlan === 'Pulsuz Plan') {
+
+                activeCard = freeCard;
+
+            } else if (currentPlan === 'Standard Plan') {
+
+                activeCard = standardCard; 
+
+            } else if (currentPlan === 'Pro Plan' || currentPlan === 'Premium Plan') { // Premium Plan da Pro Plan kimi görsənsin
+
+                activeCard = proCard;
+
+            } else if (currentPlan === 'Korporativ Plan') {
+
+                activeCard = enterpriseCard;
+
+            }
+
+            
+
+            if (activeCard) {
+
+                activeCard.classList.remove('opacity-70');
+
+                activeCard.classList.add('opacity-100');
+
+                // Pro planı əsas plan kimi vizual olaraq fərqləndirməyi saxla
+
+                if (activeCard.id === 'pro-plan-card'.replace('-card', '-card').toLowerCase()) { // Düzgün elementə müraciət üçün
+
+                    activeCard.classList.add('lg:scale-105', 'card-shadow');
+
+                } else {
+
+                    activeCard.classList.remove('lg:scale-105', 'card-shadow');
+
+                }
+
+            }
+
+        }
+
+
+
+        /** Ən son nəticə kartının HTML-ini yaradır */
+
+        function renderResultCard(result, originalUrl) {
+
+            const embedSection = result.embed_html ? `
+
+                <div class="result-card-embed rounded-lg bg-gray-100 p-4 border border-gray-200 mt-4">
+
+                    <h4 class="font-bold text-gray-700 mb-2 flex items-center"><i class="fas fa-code mr-2"></i> Embed Kodu</h4>
+
+                    <pre id="embed-code-output" class="whitespace-pre-wrap break-all text-xs bg-gray-200 p-3 rounded-md text-gray-800">${result.embed_html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+
+                    <!-- Embed kodunun kopyalama mesajı URL axtarışının altında görünür -->
+
+                    <button onclick="copyEmbedCode('${result.embed_html.replace(/'/g, "\\'")}')" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 transition-colors font-semibold">
+
+                        <i class="fas fa-copy mr-1"></i> Kopyala
+
+                    </button>
+
+                </div>` : '';
+
+
+
+            return `
+
+                <div id="card-latest" class="p-4 bg-white rounded-xl shadow-lg border-l-4 border-indigo-500">
+
+                    <div class="flex flex-col md:flex-row gap-4">
+
+                        <div class="md:w-1/3">
+
+                            <img src="${result.thumbnail_url}" alt="${result.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/640x360?text=Şəkil+Yoxdur';" class="video-thumbnail w-full rounded-lg shadow-md">
+
+                            <!-- Şəkil URL-i kopyalandıqda mesajın öz düyməsinin altında görünməsi üçün ID (image-copy-message-latest) əlavə edildi -->
+
+                            <button onclick="copyImageUrl('${result.thumbnail_url}', 'image-copy-message-latest')" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 transition-colors font-semibold">
+
+                                <i class="fas fa-image mr-1"></i> Şəkil URL-i Kopyala
+
+                            </button>
+
+                            <!-- Şəkil URL-i kopyalama mesajı üçün xüsusi yer bərpa edildi -->
+
+                            <p id="image-copy-message-latest" class="text-xs h-4 mt-1"></p> 
+
+                        </div>
+
+                        <div class="md:w-2/3 space-y-2">
+
+                            <h3 class="text-xl font-bold text-gray-900">${result.name}</h3>
+
+                            <p class="text-sm text-gray-600">${result.description}</p>
+
+                            <p class="text-xs text-gray-400 truncate">Mənbə URL: ${originalUrl}</p>
+
+                            ${embedSection}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+
+
+
+
+
+        /** Ən son nəticəni göstərir */
+
+        function displayResult(result, originalUrl) {
+
+            // Ən son nəticə kartını göstər
+
+            latestResultContainer.classList.remove('hidden');
+
+            resultCardLatest.innerHTML = renderResultCard(result, originalUrl);
+
+        }
+
+
+
+        /** API-yə məlumat göndərir və nəticəni alır */
+
+        async function extractInfo() {
+
+            const url = urlInput.value.trim();
+
+            errorMessageEl.textContent = '';
+
+            
+
+            if (!url) {
+
+                displayMessage(errorMessageEl, '❌ Zəhmət olmasa URL daxil edin.', true);
+
+                return;
+
+            }
+
+
+
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+
+                displayMessage(errorMessageEl, '❌ Daxil olunmayıb. Zəhmət olmasa, əvvəlcə daxil olun.', true);
+
+                return;
+
+            }
+
+
+
+            loadingIndicator.classList.remove('hidden');
+
+            extractButton.disabled = true;
+
+
+
+            try {
+
+                const response = await fetch(`${API_URL}/api/thumbnail`, {
+
+                    method: 'POST',
+
+                    headers: {
+
+                        'Content-Type': 'application/json',
+
+                        'Authorization': `Bearer ${token}`
+
+                    },
+
+                    body: JSON.stringify({ url })
+
+                });
+
+
+
+                const data = await response.json();
+
+
+
+                if (!response.ok) {
+
+                    throw new Error(data.error || data.message || `API Xətası: ${response.status}`);
+
+                }
+
+                
+
+                // Məlumatı əsas kartda göstər
+
+                displayResult(data, url); 
+
+                urlInput.value = ''; // Uğurlu olduqda inputu təmizlə
+
+
+
+            } catch (error) {
+
+                console.error("Məlumat çıxarışında xəta:", error);
+
+                displayMessage(errorMessageEl, `❌ Xəta: ${error.message}`, true);
+
+                
+
+                // Premium xətasını idarə et
+
+                if (error.message.includes('Premium Abunəlik Tələb Olunur')) {
+
+                    document.getElementById('subscribe-message').textContent = 'Bu link növü üçün Abunəlik tələb olunur!';
+
+                    setTimeout(() => document.getElementById('subscribe-message').textContent = '', 8000);
+
+                }
+
+            } finally {
+
+                loadingIndicator.classList.add('hidden');
+
+                extractButton.disabled = false;
+
+            }
+
+        }
+
+        
+
+        // --- Auth & Lifecycle ---
+
+        
+
+        async function handleAuth(isLogin) {
+
+            const email = document.getElementById('auth-email').value;
+
+            const password = document.getElementById('auth-password').value;
+
+            authMessage.textContent = 'Yüklənir...';
+
+            authMessage.className = 'text-center text-indigo-500 font-medium h-4';
+
+            
+
+            const endpoint = isLogin ? '/login' : '/register';
+
+
+
+            try {
+
+                const response = await fetch(`${API_URL}${endpoint}`, {
+
+                    method: 'POST',
+
+                    headers: { 'Content-Type': 'application/json' },
+
+                    body: JSON.stringify({ email, password })
+
+                });
+
+                const data = await response.json();
+
+
+
+                if (!response.ok) {
+
+                    throw new Error(data.error || 'Server Xətası');
+
+                }
+
+
+
+                if (isLogin) {
+
+                    localStorage.setItem('token', data.token);
+
+                    // Girişdə istifadəçinin local planını sıfırlayırıq ki, status yenidən yoxlanılsın
+
+                    // Lakin sadəcə yoxlama funksiyasını çağırırıq
+
+                    checkAuthStatus(); 
+
+                }
+
+                
+
+                displayMessage(authMessage, data.message || 'Uğurlu!', false);
+
+                if (!isLogin) {
+
+                    authTitle.textContent = 'Daxil Olun'; // Qeydiyyatdan sonra girişi təklif et
+
+                }
+
+
+
+            } catch (error) {
+
+                displayMessage(authMessage, error.message, true);
+
+            }
+
+        }
+
+        
+
+        async function checkAuthStatus() {
+
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+
+                authReady = true;
+
+                // Əgər token yoxdursa, amma localda plan adı varsa, onu da təmizlə
+
+                localStorage.removeItem('currentPlan');
+
+                return; // Token yoxdursa, auth səhifəsində qal
+
+            }
+
+            
+
+            try {
+
+                const response = await fetch(`${API_URL}/status`, {
+
+                    method: 'GET',
+
+                    headers: { 'Authorization': `Bearer ${token}` }
+
+                });
+
+                
+
+                if (response.ok) {
+
+                    const data = await response.json();
+
+                    
+
+                    const localPlan = localStorage.getItem('currentPlan');
+
+                    let determinedPlan;
+
+
+
+                    if (!localPlan) {
+
+                        // Local plan yoxdursa, API statusuna görə müəyyən et
+
+                        determinedPlan = data.subscribed ? 'Pro Plan' : 'Pulsuz Plan'; 
+
+                        localStorage.setItem('currentPlan', determinedPlan);
+
+                    } else {
+
+                         determinedPlan = localPlan; // Local yaddaşdakı planı istifadə et
+
+                    }
+
+                    
+
+                    updateUI(data.email, data.subscribed, determinedPlan);
+
+
+
+                } else {
+
+                    // Əgər API 401 qaytarsa, token köhnəlmişdir
+
+                    localStorage.removeItem('token');
+
+                    localStorage.removeItem('currentPlan');
+
+                }
+
+
+
+            } catch (error) {
+
+                console.error("Status yoxlanışında xəta:", error);
+
+                localStorage.removeItem('token');
+
+                localStorage.removeItem('currentPlan');
+
+            } finally {
+
+                authReady = true;
+
+            }
+
+        }
+
+
+
+        function logout() {
+
+            localStorage.removeItem('token');
+
+            localStorage.removeItem('currentPlan'); // Çıxış zamanı planı da təmizlə
+
+            location.reload(); // Səhifəni yenilə
+
+        }
+
+
+
+        /** * Abunəlik simulyasiyası: Hər hansı düyməyə basıldıqda plan dəyişir.
+
+         * @param {string} planName - Abunə olunan planın adı.
+
+         */
+
+        async function subscribe(planName) {
+
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+
+                displayMessage(subscribeMessageEl, '❌ Daxil olunmayıb!', true);
+
+                return;
+
+            }
+
+
+
+            // Əgər cari plandırsa, heç nə etmə
+
+            if (localStorage.getItem('currentPlan') === planName) {
+
+                 displayMessage(subscribeMessageEl, `ℹ️ Siz artıq "${planName}" planındasınız.`, false);
+
+                 return;
+
+            }
+
+
+
+            subscribeMessageEl.textContent = `"${planName}" planına keçid aktivləşdirilir...`;
+
+
+
+            try {
+
+                let message = `✅ "${planName}" plana uğurla abunə olundu!`;
+
+                let isSubscriptionActive = true;
+
+                
+
+                if (planName === 'Pulsuz Plan') {
+
+                    // Pulsuz plana keçid (Downgrade) simulyasiyası
+
+                    isSubscriptionActive = false;
+
+                    message = '✅ Pulsuz plana uğurla keçid edildi.';
+
+                    // Həqiqi API çağırışı burada olmalıdır: fetch(`${API_URL}/unsubscribe`, { ... });
+
+                } else {
+
+                    // Ödənişli plana abunəlik simulyasiyası (Upgrade)
+
+                    // Həqiqi API çağırışı burada olmalıdır:
+
+                    const response = await fetch(`${API_URL}/subscribe`, {
+
+                        method: 'POST',
+
+                        headers: { 'Authorization': `Bearer ${token}` }
+
+                    });
+
+
+
+                    const data = await response.json();
+
+
+
+                    if (!response.ok) {
+
+                        throw new Error(data.error || 'Abunəlik Xətası');
+
+                    }
+
+                    isSubscriptionActive = data.subscribed; 
+
+                }
+
+
+
+                // Local yaddaşı yenilə və UI-ı yenilə
+
+                localStorage.setItem('currentPlan', planName);
+
+                // YENİLƏNMİŞ: updateUI yalnız local plan adını istifadə edir, subscribed dəyəri local plandan çıxarılır
+
+                updateUI(document.getElementById('user-email').textContent, isSubscriptionActive, planName);
+
+                displayMessage(subscribeMessageEl, message, false);
+
+
+
+            } catch (error) {
+
+                displayMessage(subscribeMessageEl, `❌ Xəta: ${error.message}`, true);
+
+            }
+
+        }
+
+
+
+        // Səhifə yükləndikdə yoxla
+
+        window.onload = checkAuthStatus;
+
+    </script>
+
+</body>
+
+</html>
