@@ -602,8 +602,5 @@ app.post('/api/thumbnail', authenticateToken, async (req, res) => {
 // ------------------------------------------------------------------
 app.listen(PORT, () => {
     console.log(`✅ Server hazırdır: http://localhost:${PORT}`);
-<<<<<<< HEAD
-});
-=======
-});
->>>>>>> 1ec612a4d96f3c1c82a7933c4d5b2b96cae4eb87
+
+})
