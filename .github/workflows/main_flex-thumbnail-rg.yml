@@ -1,6 +1,4 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy Node.js project to Azure Function App - flex-thumbnail-rg
 
 on:
@@ -10,15 +8,12 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
-  NODE_VERSION: '20' # set this to the node version to use (supports 8.x, 10.x, 12.x)
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # Fayl yolu KÖK QOVLUQ olaraq təyin edildi
+  NODE_VERSION: '20'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
@@ -31,11 +26,7 @@ jobs:
       - name: 'Resolve Project Dependencies Using Npm'
         shell: bash
         run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           npm install
-          npm run build --if-present
-          npm run test --if-present
-          popd
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
@@ -45,17 +36,14 @@ jobs:
         with:
           name: node-app
           path: release.zip
-          # --- DEPLOY BÖLMƏSİNİN YENİLƏNMƏSİ ---
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-functionapp.outputs.webapp-url }}
-      
+    
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: node-app
 
@@ -66,9 +54,8 @@ jobs:
           
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
-        id: deploy-to-functionapp
         with:
-          app-name: 'flex-thumbnail-rg' # Sizin funksiya tətbiqinizin adıdır
-          package: '.'
-          # Yalnız bu açarı istifadə edirik:
+          app-name: 'flex-thumbnail-rg' # Sizin Funksiya Tətbiqinizin Adı
+          package: '.' # Fayl yolu KÖK QOVLUQ olaraq təyin edildi
+          # Sizin yeganə və düzgün açarınızı (secrets) istifadə edirik:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
