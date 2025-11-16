@@ -1,4 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action (V.01)
+# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action (V.03)
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
 name: Build and deploy Node.js project to Azure Function App - flex-thumbnail-rg
@@ -78,3 +78,4 @@ jobs:
           app-name: 'flex-thumbnail-rg'
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
