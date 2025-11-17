@@ -1,52 +1,86 @@
-name: Build and deploy Node.js app to Azure Function App
+# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action (V.03)
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy Node.js project to Azure Function App - flex-thumbnail-rg
 
 on:
   push:
     branches:
-      - asas # Defolt filial adınızı (asas) istifadə edirik
+      - main
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_NAME: menim-rapidapi-testim-fn # Azure Funksiya Tətbiqinizin Adı
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # Yerləşdirmək üçün kodun yolu
-  NODE_VERSION: '18.x'                # Node.js versiyası
-  
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  NODE_VERSION: '20' # set this to the node version to use (supports 8.x, 10.x, 12.x)
+
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    
+    permissions:
+      # OIDC (Federasiya) metodu işləmədiyi üçün id-token-i saxlayırıq, lakin Client Secret istifadə edirik
+      id-token: write 
+      contents: read 
+
     steps:
-      # 1. Kodu yoxlayın
-    - name: Checkout GitHub Action
-      uses: actions/checkout@v4
-      
-      # 2. Node.js quraşdırın
-    - name: Setup Node ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        
-      # 3. Asılılıqları quraşdırın
-    - name: 'npm install and build'
-      run: |
-        npm install
-        npm run build --if-present
-        
-      # 4. Azure-a Client Secret ilə giriş edin (Dəyişiklik burada)
-    - name: 'Azure CLI Login using Client Secret'
-      uses: azure/login@v1
-      with:
-        creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}", "clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}", "tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
-        # Açıq şəkildə service principal tipini müəyyənləşdirin
-        auth-type: 'service-principal'
-        
-      # 5. Azure Funksiya Tətbiqinə yerləşdirin
-    - name: 'Run Azure Functions Action'
-      uses: Azure/functions-action@v1
-      id: fa
-      with:
-        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-        
-    - name: Logout of Azure CLI
-      run: az logout
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ env.NODE_VERSION }} Environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 'Resolve Project Dependencies Using Npm'
+        shell: bash
+        run: |
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          npm install
+          npm run build --if-present
+          popd
+
+      - name: Zip artifact for deployment
+        run: zip release.zip ./* -r
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-app
+          path: release.zip
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read 
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: node-app
+
+      - name: Unzip artifact for deployment
+        run: |
+          unzip release.zip
+          rm release.zip
+          
+      # ƏSAS DÜZƏLİŞ: Client Secret (Service Principal) ilə daxil olmağa məcbur edirik.
+      # Bu, sonuncu xətanı (AADSTS70025 və 'Unexpected input client-secret' warning) həll edir.
+      - name: Login to Azure using Client Secret
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }} 
+          auth-type: 'service_principal' # Client Secret istifadə edildiyini action-a açıq şəkildə bildirir.
+          
+      - name: 'Run Azure Functions Action'
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          # Tətbiq adı sizin tələbinizə uyğun olaraq 'flex-thumbnail-rg' olaraq təyin edildi.
+          app-name: 'flex-thumbnail-rg' 
+          slot-name: 'Production'
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
