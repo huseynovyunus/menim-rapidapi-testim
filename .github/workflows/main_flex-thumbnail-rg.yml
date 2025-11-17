@@ -6,7 +6,7 @@ name: Build and deploy Node.js project to Azure Function App - flex-thumbnail-rg
 on:
   push:
     branches:
-      - main
+      - asas
   workflow_dispatch:
 
 env:
@@ -84,4 +84,5 @@ jobs:
           app-name: 'flex-thumbnail-rg' 
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
 
