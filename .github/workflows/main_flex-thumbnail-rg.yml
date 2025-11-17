@@ -1,58 +1,21 @@
-# Bu, sadələşdirilmiş, yığma və yerləşdirməni bir addımda edən versiyadır.
-name: Build and Deploy Node.js Project to Azure Function App (menim-rapidapi-testim-fn)
-
+name: Deploy Node API to Azure
 on:
   push:
-    branches:
-      - asas # Düzəliş: Defolt filial adı 'asas' olaraq təyin edildi.
-  workflow_dispatch:
-
-env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' 
-  NODE_VERSION: '20' 
-  FUNCTION_APP_NAME: 'menim-rapidapi-testim-fn' # Düzəliş: Funksiya Tətbiqinizin düzgün adı.
+    branches: [ "main" ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      # İcazələr Client Secret istifadə edildiyi üçün təyin edildi.
-      id-token: write
-      contents: read 
-
     steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v4
-
-      - name: Setup Node ${{ env.NODE_VERSION }} Environment
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '22'
 
-      - name: 'Resolve Project Dependencies Using Npm'
-        shell: bash
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          npm install
-          npm run build --if-present
-          popd
-          
-      # Autentifikasiya addımı: Ən vacib düzəlişlər buradadır.
-      - name: Login to Azure using Client Secret
-        uses: azure/login@v2
+      - run: npm install
+      - run: npm run build --if-present
+
+      - uses: azure/webapps-deploy@v3
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }} 
-          auth-type: 'SERVICE_PRINCIPAL' # Düzəliş: Xəta mesajında tələb olunan format.
-          
-      - name: 'Run Azure Functions Action'
-        uses: Azure/functions-action@v1
-        with:
-          app-name: ${{ env.FUNCTION_APP_NAME }} # Düzgün Funksiya Tətbiqi adı
-          slot-name: 'Production'
-          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-
-
-
+          app-name: YOUR_AZURE_APP_NAME
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
