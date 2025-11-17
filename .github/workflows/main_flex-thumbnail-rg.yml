@@ -17,7 +17,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      # OIDC (Federasiya) metodu işləmədiyi üçün id-token-i saxlayırıq, lakin Client Secret istifadə edirik
       id-token: write 
       contents: read 
 
@@ -37,6 +36,24 @@ jobs:
           npm install
           npm run build --if-present
           popd
+
+      # ⚠️ Secret-ləri yoxlamaq üçün MÜVƏQQƏTİ addım.
+      # İşləmə bitdikdən sonra bunu SİLMƏLİYİK.
+      - name: Check Azure Secrets (TEMPORARY CHECK)
+        shell: bash
+        run: |
+          # Secret-ləri konsolda göstərməmək üçün log-lama təhlükəsizdir
+          echo "Client ID: Yoxlanılır..."
+          echo "Tenant ID: Yoxlanılır..."
+          
+          # Secret-in dəyərini görmək mümkün deyil (GitHub onu * * * olaraq maskalayır),
+          # amma onun mövcudluğunu yoxlayırıq.
+          if [ -n "${{ secrets.AZURE_CLIENT_SECRET }}" ]; then
+            echo "Client Secret exists and is non-empty."
+          else
+            echo "FATAL ERROR: Client Secret is empty or missing in GitHub Secrets! Please check the value."
+            exit 1
+          fi
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
@@ -66,7 +83,6 @@ jobs:
           rm release.zip
           
       # ƏSAS DÜZƏLİŞ: Client Secret (Service Principal) ilə daxil olmağa məcbur edirik.
-      # Bu, sonuncu xətanı (AADSTS70025 və 'Unexpected input client-secret' warning) həll edir.
       - name: Login to Azure using Client Secret
         uses: azure/login@v2
         with:
@@ -80,7 +96,6 @@ jobs:
         uses: Azure/functions-action@v1
         id: fa
         with:
-          # Tətbiq adı sizin tələbinizə uyğun olaraq 'flex-thumbnail-rg' olaraq təyin edildi.
           app-name: 'flex-thumbnail-rg' 
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
