@@ -74,7 +74,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           client-secret: ${{ secrets.AZURE_CLIENT_SECRET }} 
-          auth-type: 'service_principal' # Client Secret istifadə edildiyini action-a açıq şəkildə bildirir.
+          auth-type: 'SERVICE_PRINCIPAL' # Client Secret istifadə edildiyini action-a açıq şəkildə bildirir.
           
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
@@ -84,3 +84,4 @@ jobs:
           app-name: 'flex-thumbnail-rg' 
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
