@@ -1,5 +1,5 @@
 # Bu, sadələşdirilmiş, yığma və yerləşdirməni bir addımda edən versiyadır.
-name: Build and Deploy Node.js Project to Azure Function App (menim-rapidapi-testim-rg)
+name: Build and Deploy Node.js Project to Azure Function App (menim-rapidapi-testim-rg-fn)
 
 on:
   push:
@@ -53,4 +53,5 @@ jobs:
           app-name: ${{ env.FUNCTION_APP_NAME }} # Düzgün Funksiya Tətbiqi adı
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
 
