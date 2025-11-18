@@ -1,14 +1,11 @@
 {
   "bindings": [
     {
-      "authLevel": "function",
+      "authLevel": "anonymous",  // Düzəliş burada olmalıdır!
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": [
-        "get",
-        "post"
-      ]
+      "methods": ["get", "post"]
     },
     {
       "type": "http",
@@ -16,5 +13,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "index.js"
+  "disabled": false
 }
