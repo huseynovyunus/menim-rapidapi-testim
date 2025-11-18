@@ -3,7 +3,7 @@ name: Build and deploy Node.js project to Azure Function App - menim-rapidapi-te
 on:
   push:
     branches:
-      - main
+      - asas
   workflow_dispatch:
 
 env:
@@ -75,3 +75,4 @@ jobs:
           app-name: ${{ env.FUNCTION_APP_NAME }} # DÜZGÜN FUNKSİYA ADINI İSTİFADƏ EDİR
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
