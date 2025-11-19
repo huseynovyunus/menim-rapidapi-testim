@@ -1,6 +1,0 @@
-// ...
-app.http('httpTrigger', {
-  methods: ['GET', 'POST'],
-  authLevel: 'anonymous', // <--- Konfiqurasiya buradadır
-  handler: async (request, context) => {
-// ...
