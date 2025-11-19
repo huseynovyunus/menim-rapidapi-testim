@@ -1,40 +1,6 @@
-<<<<<<< HEAD
-{
-  "bindings": [
-    {
-      "authLevel": "anonymous",
-      "type": "httpTrigger",
-      "direction": "in",
-      "name": "req",
-      "methods": ["get", "post"]
-    },
-    {
-      "type": "http",
-      "direction": "out",
-      "name": "res"
-    }
-  ],
-  "disabled": false
-}
-
-=======
-{
-  "bindings": [
-    {
-      "authLevel": "anonymous",
-      "type": "httpTrigger",
-      "direction": "in",
-      "name": "req",
-      "methods": ["get", "post"]
-    },
-    {
-      "type": "http",
-      "direction": "out",
-      "name": "res"
-    }
-  ],
-  "disabled": false
-}
-
-
->>>>>>> e407ff9604db286a838df68efa94a6a17b0033cd
+// ...
+app.http('httpTrigger', {
+  methods: ['GET', 'POST'],
+  authLevel: 'anonymous', // <--- Konfiqurasiya buradadır
+  handler: async (request, context) => {
+// ...
