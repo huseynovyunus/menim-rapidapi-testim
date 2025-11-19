@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
   "bindings": [
     {
@@ -16,8 +15,6 @@
   ],
   "disabled": false
 }
-
-=======
 {
   "bindings": [
     {
@@ -35,6 +32,3 @@
   ],
   "disabled": false
 }
-
-
->>>>>>> e407ff9604db286a838df68efa94a6a17b0033cd
