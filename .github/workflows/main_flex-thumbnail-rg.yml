@@ -1,4 +1,4 @@
-name: Build and Deploy Node.js Project to Azure Function App - flex-thumbnail-rg
+name: Build and deploy Node.js project to Azure Function App - thumbnail-api-fn
 
 on:
   push:
@@ -7,8 +7,11 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' 
   NODE_VERSION: '20'
+  # XAHİŞ EDİRƏM, FUNKSİYA TƏTBİQİNİZİN AZURE PORTALINDAKİ DƏQİQ ADINI YOXLAYIN.
+  # Hazırda istifadə olunan ad: 'flex-thumbnail-app-2025' idi. Mən onu təxmini olaraq saxlayıram.
+  FUNCTION_APP_NAME: 'flex-thumbnail-app-2025' 
 
 jobs:
   build:
@@ -17,25 +20,26 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout Repository
+      - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
+      - name: Setup Node ${{ env.NODE_VERSION }} Environment
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
-      - name: Install Dependencies & Build
+      - name: 'Resolve Project Dependencies Using Npm'
+        shell: bash
         run: |
-          cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          npm ci
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          npm install
           npm run build --if-present
+          popd
 
-      - name: Archive Project for Deployment
-        run: zip -r release.zip .
+      - name: Zip artifact for deployment
+        run: zip release.zip ./* -r
 
-      - name: Upload Build Artifact
+      - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
@@ -49,24 +53,30 @@ jobs:
       contents: read
 
     steps:
-      - name: Download Build Artifact
+      - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: node-app
 
-      - name: Extract Artifact
+      - name: Unzip artifact for deployment
         run: |
           unzip release.zip
           rm release.zip
-
+      
+      # Ən etibarlı login metodu (v1)
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          auth-type: SERVICE_PRINCIPAL
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Azure Function App
+      - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
+        id: fa
         with:
-          app-name: 'flex-thumbnail-rg'
+          app-name: ${{ env.FUNCTION_APP_NAME }}
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
