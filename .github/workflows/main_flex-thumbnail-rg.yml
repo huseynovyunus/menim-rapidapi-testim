@@ -1,4 +1,4 @@
-name: Build and Deploy Node.js project to Azure Function App - thumbnail-api-rg
+name: Build and Deploy Node.js project to Azure Function App - flex-thumbnail-rg
 
 on:
   push:
@@ -59,3 +59,4 @@ jobs:
           app-name: ${{ env.FUNCTION_APP_NAME }}
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
