@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "Azure Node.js Function App for RapidAPI Thumbnail Generation.",
   "main": "HttpTrigger/index.js",
-  "scripts": {
-    "start": "func start",
-    "test": "echo \"Info: No unit tests defined for this function\" && exit 0"
-  },
   "dependencies": {
     "@azure/functions": "^4.0.0",
     "axios": "^1.6.8",
@@ -16,6 +12,6 @@
     "azure-functions-core-tools": "^4.0.5521"
   },
   "engines": {
-    "node": ">=18.0.0" 
+    "node": ">=20.0.0 <21.0.0"
   }
 }

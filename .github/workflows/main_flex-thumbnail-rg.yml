@@ -39,7 +39,7 @@ jobs:
         run: zip release.zip ./* -r
 
       - name: Unzip artifact for deployment
-        run: unzip -n release.zip
+        run: unzip -o release.zip
 
           unzip release.zip
           rm release.zip
