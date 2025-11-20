@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Azure Node.js Function App for RapidAPI Thumbnail Generation.",
   "main": "HttpTrigger/index.js",
-  },
   "dependencies": {
     "@azure/functions": "^4.0.0",
     "axios": "^1.6.8",
@@ -13,6 +12,6 @@
     "azure-functions-core-tools": "^4.0.5521"
   },
   "engines": {
-    "node": ">=18.0.0" 
+    "node": ">=10.0.0 <15.0.0"
   }
 }
