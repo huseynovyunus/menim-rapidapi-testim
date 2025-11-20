@@ -39,7 +39,7 @@ jobs:
         run: zip release.zip ./* -r
 
       - name: Unzip artifact for deployment
-        run: unzip -n release.zip
+        run: unzip -o release.zip
 
           unzip release.zip
           rm release.zip
@@ -60,5 +60,6 @@ jobs:
           app-name: ${{ env.FUNCTION_APP_NAME }}
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
 
 
