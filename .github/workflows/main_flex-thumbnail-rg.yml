@@ -40,9 +40,7 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip -o release.zip
-
-          unzip release.zip
-          rm release.zip
+          
 
       - name: Azure Login
       - uses: azure/login@v1
@@ -56,6 +54,7 @@ jobs:
           app-name: ${{ env.FUNCTION_APP_NAME }}
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
 
 
 
