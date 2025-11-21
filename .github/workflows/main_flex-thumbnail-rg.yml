@@ -1,4 +1,4 @@
-name: Build and Deploy Node.js project to Azure Function App - flex-thumbnail-rg
+name: Build and Deploy Node.js project to Azure Function App - flex-thumbnail-rg-fn
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 env:
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # Deploy ediləcək qovluq (repo-nun kökü)
   NODE_VERSION: '20'
-  FUNCTION_APP_NAME: 'flex-thumbnail-rg' # FAYL ADINI 'flex-thumbnail-app' OLARAQ DƏYİŞDİRDİK
+  FUNCTION_APP_NAME: 'flex-thumbnail-rg-fn' # FAYL ADINI 'flex-thumbnail-app' OLARAQ DƏYİŞDİRDİK
 
 jobs:
   build-and-deploy:
@@ -58,3 +58,4 @@ jobs:
           # Bütün layihə qovluğunu deploy edir (zip/unzip tələb olunmur)
 
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
