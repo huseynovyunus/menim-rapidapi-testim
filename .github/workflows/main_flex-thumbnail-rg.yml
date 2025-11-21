@@ -1,22 +1,20 @@
-name: Build and Deploy Node.js project to Azure Function App - flex-thumbnail-rg
+name: Build and Deploy Node.js project to Azure Function App - flex-thumbnail-app
 
 on:
   push:
     branches:
       - main
-  # İş axınını GitHub interfeysindən əl ilə işə salmaq üçün
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # Deploy ediləcək qovluq (repo-nun kökü)
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' 
   NODE_VERSION: '20'
-  FUNCTION_APP_NAME: 'flex-thumbnail-rg' 
+  FUNCTION_APP_NAME: 'flex-thumbnail-app' 
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      # OpenID Connect (OIDC) ilə təhlükəsiz Azure Login üçün lazımdır
       id-token: write
       contents: read
 
@@ -30,32 +28,18 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Resolve Project Dependencies Using Npm
-        shell: bash
         run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           npm install
-          # Əgər package.json-da "build" skripti varsa, onu işə salır
           npm run build --if-present
-          popd
 
-      # 1. Azure Login: Düzgün indentasiya və OIDC icazə istifadəsi
-      # Qeyd: Əgər siz Service Principal Creds istifadə edirsinizsə, aşağıdakı 'creds' hissəsini aktiv edin.
       - name: Azure Login
         uses: azure/login@v1
         with:
-          # OIDC üçün tələb olunanlar:
-          # client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          # tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          # subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          
-          # Və ya Service Principal JSON üçün:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 2. Azure Functions Deploy Aksiyası
       - name: Run Azure Functions Action
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.FUNCTION_APP_NAME }}
           slot-name: 'Production'
-          # Bütün layihə qovluğunu deploy edir (Node.js üçün tövsiyə olunur)
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
