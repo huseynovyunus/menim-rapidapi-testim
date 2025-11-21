@@ -15,6 +15,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
+      # OIDC üçün tələb olunur (daha təhlükəsiz daxilolma)
       id-token: write
       contents: read
 
@@ -35,27 +36,24 @@ jobs:
           npm run build --if-present
           popd
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
-
-      - name: Unzip artifact for deployment
-        run: unzip -o release.zip
-
-          unzip release.zip
-          rm release.zip
+      # ❌ Səhv və artıq zipping/unzipping addımları SİLİNDİ
 
       - name: Azure Login
-      - uses: azure/login@v1
+        # ⚠️ Əsas Düzəliş: uses düzgün indentasiya edildi
+        uses: azure/login@v1
         with:
+          # Əgər OIDC istifadə edirsinizsə:
+          # client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          # tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          # subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          # Əgər Service Principal (Köhnə Metod) istifadə edirsinizsə:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Run Azure Functions Action
         uses: Azure/functions-action@v1
-        id: fa
+        # id: fa lazım deyilsə silinə bilər
         with:
           app-name: ${{ env.FUNCTION_APP_NAME }}
           slot-name: 'Production'
+          # Bütün layihə qovluğunu deploy edir
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-
-
-
