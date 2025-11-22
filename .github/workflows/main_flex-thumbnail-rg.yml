@@ -9,7 +9,7 @@ on:
 env:
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # Deploy ediləcək qovluq
   NODE_VERSION: '20'
-  FUNCTION_APP_NAME: 'flex-thumbnail-rg' # Azure Function App adı
+  FUNCTION_APP_NAME: flex-thumbnail-rg # Azure Function App adı
 
 jobs:
   build-and-deploy:
