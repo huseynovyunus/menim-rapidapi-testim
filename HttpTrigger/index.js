@@ -1,6 +1,8 @@
 // Asılılıqları daxil edirik
-const axios = require('axios'); 
-const puppeteer = require('puppeteer'); 
+const axios = require('axios'); 
+const puppeteer = require('puppeteer-core'); // DÜZƏLİŞ 1: Puppeteer-core istifadə edirik
+const path = require('path'); // DÜZƏLİŞ 2: Yol idarəçiliyi üçün lazımdır
+
 // Express asılılıqları (express, cors, express-rate-limit) serversiz mühit üçün silinir.
 
 // Konfiqurasiya
@@ -30,6 +32,21 @@ const PLAN_ACCESS = {
     'medium': 1,
     'premium': 2
 };
+
+// ----------------------------------------------------
+// ⚙️ AZURE PUPPETEER KONFİQURASİYASI (Ən vacib hissə)
+// ----------------------------------------------------
+// Chromium-un Azure-da yerləşdiyi yeri təyin edirik
+const AZURE_EXECUTABLE_PATH = path.join(
+    process.env.HOME,
+    'node_modules',
+    'puppeteer-core',
+    '.local-chromium',
+    'linux-1249712', // Bu versiya Azure Funksiyaları üçün etibarlıdır
+    'chrome-linux',
+    'chrome'
+);
+// ----------------------------------------------------
 
 
 // ------------------------------------------------------------------
@@ -123,7 +140,7 @@ async function extractDailyMotionData(url) {
 
 /**
  * 🚀 PUPPETEER ilə DƏRİN MƏLUMAT ÇIXARMA
- * Bu funksiya server.js-dən birbaşa köçürülür və Azure Funksiyası mühitinə uyğunlaşdırılır.
+ * Bu funksiya serversiz mühitə uyğunlaşdırılmışdır.
  */
 async function extractDeepData(url, plan = PRICING_PLANS.FREE.internal, context) {
     let browser;
@@ -164,6 +181,7 @@ async function extractDeepData(url, plan = PRICING_PLANS.FREE.internal, context)
     try {
         // AZURE FUNCTİONS VƏ PUPPETEER (Linux planı üçün)
         browser = await puppeteer.launch({
+            executablePath: AZURE_EXECUTABLE_PATH, // DÜZƏLİŞ 3: Yolu əlavə edirik
             headless: 'new',
             // Azure Functions Linux tətbiqləri üçün ən vacib arqumentlər:
             args: [
@@ -202,7 +220,7 @@ async function extractDeepData(url, plan = PRICING_PLANS.FREE.internal, context)
 
         const data = await page.evaluate((currentPlan) => {
             const output = {};
-            // ... (KÖÇÜRÜLMÜŞ `page.evaluate` MƏNTİQİ server.js-dən) ...
+            
             // 1. Əsas Meta Məlumatlar (Bütün planlar üçün)
             output.ogImage = document.querySelector('meta[property="og:image"]')?.content;
             output.ogTitle = document.querySelector('meta[property="og:title"]')?.content;
